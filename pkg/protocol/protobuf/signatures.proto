@@ -31,12 +31,28 @@ enum SignatureType
 }
 
 message KeyIdentity {
-    reserved 2;
+    // BD Modified (removed) - Begin
+    // reserved 2;
+    // BD Modified (removed) - End
     oneof identity_type {
         bytes public_key = 1;
+        // BD Modified (added) - Begin
+        bytes key_id = 2;
+        // BD Modified (added) - End
         uint32 handle = 3;
     }
 }
+
+// BD Modified (added) - Begin
+message Present_Key_Signature_Data {
+    bytes auth_token = 1;
+}
+
+message RSA_Signature_Data {
+    fixed32 expires_at = 1;
+    bytes signature = 2;
+}
+// BD Modified (added) - End
 
 message AES_GCM_Personalized_Signature_Data {
     bytes   epoch       = 1;
@@ -64,11 +80,19 @@ message HMAC_Personalized_Signature_Data {
 }
 
 message SignatureData {
-    reserved 7;
+    // BD Modified (removed) - Begin
+    // reserved 7;
+    // BD Modified (removed) - End
     KeyIdentity    signer_identity          = 1;
     oneof sig_type {
+        // BD Modified (added) - Begin
+        Present_Key_Signature_Data          Present_Key_data = 2;
+        // BD Modified (added) - End
         AES_GCM_Personalized_Signature_Data AES_GCM_Personalized_data = 5;
         HMAC_Signature_Data                 session_info_tag          = 6;
+        // BD Modified (added) - Begin
+        RSA_Signature_Data                  RSA_data = 7;
+        // BD Modified (added) - End
         HMAC_Personalized_Signature_Data    HMAC_Personalized_data    = 8;
         AES_GCM_Response_Signature_Data     AES_GCM_Response_data     = 9;
     }

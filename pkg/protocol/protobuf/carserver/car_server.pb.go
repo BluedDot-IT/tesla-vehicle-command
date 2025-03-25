@@ -328,6 +328,7 @@ type Action struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to ActionMsg:
+	//
 	//	*Action_VehicleAction
 	ActionMsg isAction_ActionMsg `protobuf_oneof:"action_msg"`
 }
@@ -394,6 +395,7 @@ type VehicleAction struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to VehicleActionMsg:
+	//
 	//	*VehicleAction_GetVehicleData
 	//	*VehicleAction_ChargingSetLimitAction
 	//	*VehicleAction_ChargingStartStopAction
@@ -1799,6 +1801,7 @@ type Response struct {
 
 	ActionStatus *ActionStatus `protobuf:"bytes,1,opt,name=actionStatus,proto3" json:"actionStatus,omitempty"`
 	// Types that are assignable to ResponseMsg:
+	//
 	//	*Response_VehicleData
 	//	*Response_GetSessionInfoResponse
 	//	*Response_GetNearbyChargingSites
@@ -1969,6 +1972,7 @@ type ResultReason struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Reason:
+	//
 	//	*ResultReason_PlainText
 	Reason isResultReason_Reason `protobuf_oneof:"reason"`
 }
@@ -2145,6 +2149,7 @@ type ChargingStartStopAction struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to ChargingAction:
+	//
 	//	*ChargingStartStopAction_Unknown
 	//	*ChargingStartStopAction_Start
 	//	*ChargingStartStopAction_StartStandard
@@ -3133,6 +3138,7 @@ type MediaUpdateVolume struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to MediaVolume:
+	//
 	//	*MediaUpdateVolume_VolumeDelta
 	//	*MediaUpdateVolume_VolumeAbsoluteFloat
 	MediaVolume isMediaUpdateVolume_MediaVolume `protobuf_oneof:"media_volume"`
@@ -3666,10 +3672,12 @@ type VehicleControlSunroofOpenCloseAction struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to SunroofLevel:
+	//
 	//	*VehicleControlSunroofOpenCloseAction_AbsoluteLevel
 	//	*VehicleControlSunroofOpenCloseAction_DeltaLevel
 	SunroofLevel isVehicleControlSunroofOpenCloseAction_SunroofLevel `protobuf_oneof:"sunroof_level"`
 	// Types that are assignable to Action:
+	//
 	//	*VehicleControlSunroofOpenCloseAction_Vent
 	//	*VehicleControlSunroofOpenCloseAction_Close
 	//	*VehicleControlSunroofOpenCloseAction_Open
@@ -3858,6 +3866,7 @@ type VehicleControlWindowAction struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Action:
+	//
 	//	*VehicleControlWindowAction_Unknown
 	//	*VehicleControlWindowAction_Vent
 	//	*VehicleControlWindowAction_Close
@@ -4891,6 +4900,7 @@ type HvacSeatHeaterActions_HvacSeatHeaterAction struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to SeatHeaterLevel:
+	//
 	//	*HvacSeatHeaterActions_HvacSeatHeaterAction_SEAT_HEATER_UNKNOWN
 	//	*HvacSeatHeaterActions_HvacSeatHeaterAction_SEAT_HEATER_OFF
 	//	*HvacSeatHeaterActions_HvacSeatHeaterAction_SEAT_HEATER_LOW
@@ -4898,6 +4908,7 @@ type HvacSeatHeaterActions_HvacSeatHeaterAction struct {
 	//	*HvacSeatHeaterActions_HvacSeatHeaterAction_SEAT_HEATER_HIGH
 	SeatHeaterLevel isHvacSeatHeaterActions_HvacSeatHeaterAction_SeatHeaterLevel `protobuf_oneof:"seat_heater_level"`
 	// Types that are assignable to SeatPosition:
+	//
 	//	*HvacSeatHeaterActions_HvacSeatHeaterAction_CAR_SEAT_UNKNOWN
 	//	*HvacSeatHeaterActions_HvacSeatHeaterAction_CAR_SEAT_FRONT_LEFT
 	//	*HvacSeatHeaterActions_HvacSeatHeaterAction_CAR_SEAT_FRONT_RIGHT
@@ -5236,6 +5247,7 @@ type HvacTemperatureAdjustmentAction_Temperature struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Type:
+	//
 	//	*HvacTemperatureAdjustmentAction_Temperature_TEMP_UNKNOWN
 	//	*HvacTemperatureAdjustmentAction_Temperature_TEMP_MIN
 	//	*HvacTemperatureAdjustmentAction_Temperature_TEMP_MAX
@@ -5333,6 +5345,7 @@ type HvacTemperatureAdjustmentAction_HvacTemperatureZone struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Type:
+	//
 	//	*HvacTemperatureAdjustmentAction_HvacTemperatureZone_TEMP_ZONE_UNKNOWN
 	//	*HvacTemperatureAdjustmentAction_HvacTemperatureZone_TEMP_ZONE_FRONT_LEFT
 	//	*HvacTemperatureAdjustmentAction_HvacTemperatureZone_TEMP_ZONE_FRONT_RIGHT
