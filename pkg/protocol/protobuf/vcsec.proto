@@ -818,16 +818,8 @@ enum SignatureType
 }
 
 message SignedMessage {
-    // BD Modified (added) - Begin
-    bytes token = 1;
-    // BD Modified (added) - End
     bytes protobufMessageAsBytes = 2;
     SignatureType signatureType = 3;
-    // BD Modified (added) - Begin
-    bytes signature = 4;
-    bytes keyId = 5;
-    uint32 counter = 6;
-    // BD Modified (added) - End
 }
 
 message ToVCSECMessage {
