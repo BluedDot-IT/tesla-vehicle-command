@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/ecdh"
 	"fmt"
+	"github.com/teslamotors/vehicle-command/internal/log"
 	"time"
 
 	"github.com/teslamotors/vehicle-command/pkg/connector"
@@ -148,7 +149,32 @@ func (v *Vehicle) executeWhitelistOperation(ctx context.Context, payload []byte)
 	return err
 }
 
-func addKeyPayload(publicKey *ecdh.PublicKey, role keys.Role, formFactor vcsec.KeyFormFactor) *vcsec.UnsignedMessage {
+func addKeyPayload(publicKey *ecdh.PublicKey, role keys.Role, formFactor vcsec.KeyFormFactor, permissions []vcsec.WhitelistKeyPermission_E, secondsActive uint32) *vcsec.UnsignedMessage {
+	if secondsActive != 0 {
+		// Add impermanent key
+		log.Debug("Adding impermanent key with seconds %d and permissions %s", secondsActive, permissions)
+		return &vcsec.UnsignedMessage{
+			SubMessage: &vcsec.UnsignedMessage_WhitelistOperation{
+				WhitelistOperation: &vcsec.WhitelistOperation{
+					SubMessage: &vcsec.WhitelistOperation_AddImpermanentKey{
+						AddImpermanentKey: &vcsec.PermissionChange{
+							Key: &vcsec.PublicKey{
+								PublicKeyRaw: publicKey.Bytes(),
+							},
+							KeyRole:           role,
+							Permission:        permissions,
+							SecondsToBeActive: secondsActive,
+						},
+					},
+					MetadataForKey: &vcsec.KeyMetadata{
+						KeyFormFactor: formFactor,
+					},
+				},
+			},
+		}
+	}
+	// Add permanent key
+	log.Debug("Adding permanent with permissions %s", permissions)
 	return &vcsec.UnsignedMessage{
 		SubMessage: &vcsec.UnsignedMessage_WhitelistOperation{
 			WhitelistOperation: &vcsec.WhitelistOperation{
@@ -157,7 +183,8 @@ func addKeyPayload(publicKey *ecdh.PublicKey, role keys.Role, formFactor vcsec.K
 						Key: &vcsec.PublicKey{
 							PublicKeyRaw: publicKey.Bytes(),
 						},
-						KeyRole: role,
+						KeyRole:    role,
+						Permission: permissions,
 					},
 				},
 				MetadataForKey: &vcsec.KeyMetadata{

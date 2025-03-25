@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -362,6 +363,10 @@ var commands = map[string]*Command{
 			{name: "ROLE", help: "One of: owner, driver, fm (fleet manager), vehicle_monitor, charging_manager"},
 			{name: "FORM_FACTOR", help: "One of: nfc_card, ios_device, android_device, cloud_key"},
 		},
+		optional: []Argument{
+			{name: "SECONDS", help: "seconds active (defaults to 0 for permanent key)"},
+			{name: "PERMS_FILE", help: "permissions file (when omitted, no permissions are passed to add key command)"},
+		},
 		handler: func(ctx context.Context, _ *account.Account, car *vehicle.Vehicle, args map[string]string) error {
 			role, ok := keys.Role_value["ROLE_"+strings.ToUpper(args["ROLE"])]
 			if !ok {
@@ -375,7 +380,24 @@ var commands = map[string]*Command{
 			if err != nil {
 				return fmt.Errorf("invalid public key: %s", err)
 			}
-			return car.AddKeyWithRole(ctx, publicKey, keys.Role(role), vcsec.KeyFormFactor(formFactor))
+			var secondsActive = 0
+			if secondsStr, ok := args["SECONDS"]; ok {
+				seconds, err := strconv.Atoi(secondsStr)
+				if err != nil {
+					return fmt.Errorf("error parsing SECONDS")
+				}
+				secondsActive = seconds
+			}
+			var permissions []vcsec.WhitelistKeyPermission_E
+			if permissionsFileName, ok := args["PERMS_FILE"]; ok {
+				permissions, err = loadPermissionsFile(permissionsFileName)
+			} else {
+				permissions, err = nil, nil
+			}
+			if err != nil {
+				return fmt.Errorf("unable to load permissions: %s", err)
+			}
+			return car.AddKeyWithRole(ctx, publicKey, keys.Role(role), vcsec.KeyFormFactor(formFactor), permissions, uint32(secondsActive))
 		},
 	},
 	"add-key-request": {
@@ -387,6 +409,10 @@ var commands = map[string]*Command{
 			{name: "ROLE", help: "One of: owner, driver, fm (fleet manager), vehicle_monitor, charging_manager"},
 			{name: "FORM_FACTOR", help: "One of: nfc_card, ios_device, android_device, cloud_key"},
 		},
+		optional: []Argument{
+			{name: "SECONDS", help: "seconds active (defaults to 0 for permanent key)"},
+			{name: "PERMS_FILE", help: "permissions file (when omitted, no permissions are passed to add key command)"},
+		},
 		handler: func(ctx context.Context, _ *account.Account, car *vehicle.Vehicle, args map[string]string) error {
 			role, ok := keys.Role_value["ROLE_"+strings.ToUpper(args["ROLE"])]
 			if !ok {
@@ -400,7 +426,24 @@ var commands = map[string]*Command{
 			if err != nil {
 				return fmt.Errorf("invalid public key: %s", err)
 			}
-			if err := car.SendAddKeyRequestWithRole(ctx, publicKey, keys.Role(role), vcsec.KeyFormFactor(formFactor)); err != nil {
+			var secondsActive = 0
+			if secondsStr, ok := args["SECONDS"]; ok {
+				seconds, err := strconv.Atoi(secondsStr)
+				if err != nil {
+					return fmt.Errorf("error parsing SECONDS")
+				}
+				secondsActive = seconds
+			}
+			var permissions []vcsec.WhitelistKeyPermission_E
+			if permissionsFileName, ok := args["PERMS_FILE"]; ok {
+				permissions, err = loadPermissionsFile(permissionsFileName)
+			} else {
+				permissions, err = nil, nil
+			}
+			if err != nil {
+				return fmt.Errorf("unable to load permissions: %s", err)
+			}
+			if err := car.SendAddKeyRequestWithRole(ctx, publicKey, keys.Role(role), vcsec.KeyFormFactor(formFactor), permissions, uint32(secondsActive)); err != nil {
 				return err
 			}
 			fmt.Printf("Sent add-key request to %s. Confirm by tapping NFC card on center console.\n", car.VIN())
@@ -420,6 +463,14 @@ var commands = map[string]*Command{
 				return fmt.Errorf("invalid public key: %s", err)
 			}
 			return car.RemoveKey(ctx, publicKey)
+		},
+	},
+	"remove-all-impermanent-keys": {
+		help:             "Remove all impermanent keys from vehicle whitelist",
+		requiresAuth:     true,
+		requiresFleetAPI: false,
+		handler: func(ctx context.Context, _ *account.Account, car *vehicle.Vehicle, args map[string]string) error {
+			return car.RemoveAllImpermanentKeys(ctx)
 		},
 	},
 	"rename-key": {
@@ -498,6 +549,7 @@ var commands = map[string]*Command{
 			slot := uint32(0)
 			var details *vcsec.WhitelistEntryInfo
 			for mask := summary.GetSlotMask(); mask > 0; mask >>= 1 {
+				fmt.Printf("Slot mask: %02x\n", mask)
 				if mask&1 == 1 {
 					details, err = car.KeyInfoBySlot(ctx, slot)
 					if err != nil {
@@ -507,7 +559,7 @@ var commands = map[string]*Command{
 						}
 					}
 					if details != nil {
-						fmt.Printf("%02x\t%s\t%s\n", details.GetPublicKey().GetPublicKeyRaw(), details.GetKeyRole(), details.GetMetadataForKey().GetKeyFormFactor())
+						fmt.Printf("%02x\t%02x\t%s\t%s\t%d\t%s\n", details.GetKeyId().GetPublicKeySHA1(), details.GetPublicKey().GetPublicKeyRaw(), details.GetKeyRole(), details.GetMetadataForKey().GetKeyFormFactor(), details.GetSecondsEntryRemainsActive(), details.GetPermissions())
 					}
 				}
 				slot++
@@ -1191,4 +1243,29 @@ var commands = map[string]*Command{
 			return nil
 		},
 	},
+}
+
+func loadPermissionsFile(filename string) ([]vcsec.WhitelistKeyPermission_E, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var permissions []vcsec.WhitelistKeyPermission_E
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(strings.TrimSpace(line), "//") {
+			continue
+		}
+		permissions = append(permissions, vcsec.WhitelistKeyPermission_E(vcsec.WhitelistKeyPermission_E_value["WHITELISTKEYPERMISSION_"+line]))
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return permissions, nil
 }
